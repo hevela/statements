@@ -18,6 +18,7 @@ type Config struct {
 const configfile = "config/config.cfg"
 
 var sampleConfig = `
+# Indicates how often the process will work. E.g.: set to "730h" to run every 30 days
 interval = "24h"
 # Set startAt to empty to stop the worker. If you want an immediate start set it to "now", otherwise use a AM-PM hour format, e.g., 12:00PM
 startAt = "12:00AM"
