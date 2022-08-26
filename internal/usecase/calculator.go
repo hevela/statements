@@ -47,6 +47,7 @@ func NewCalculator(options ...Option) Calculator {
 	return c
 }
 
+// Run is the entrypoint for the file reading and parsing. It reads all files in the configured directory
 func (c calculator) Run() {
 	// read files in path
 	files, err := ioutil.ReadDir(c.dirPath)
@@ -54,7 +55,7 @@ func (c calculator) Run() {
 		logrus.Fatal(err)
 	}
 	for _, file := range files {
-		if file.IsDir() {
+		if file.IsDir() || file.Name() == ".gitignore" {
 			continue
 		}
 		logrus.Info("processing file: ", file.Name())
@@ -73,53 +74,7 @@ func (c calculator) Run() {
 	}
 }
 
-func getEmailTemplateData(email string, statement statementSummary) (templateData, error) {
-	var err error
-	template := templateData{
-		Email:        email,
-		TotalBalance: fmt.Sprintf("%.2f", statement.total),
-		AvgCredit:    fmt.Sprintf("%.2f", statement.avgCredit),
-		AvgDebit:     fmt.Sprintf("%.2f", statement.avgDebit),
-	}
-	e := strings.Split(email, "@")
-	template.Name = strings.Title(e[0])
-	// sort monthSummary keys
-	keys := make([]string, 0, len(statement.monthSummary))
-	for k := range statement.monthSummary {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	fMonth := strings.Split(keys[0], "-")
-	template.FirstMonthYear, err = humanizeMonth(fMonth[1], fMonth[0])
-	if err != nil {
-		return templateData{}, err
-	}
-
-	lMonth := strings.Split(keys[len(keys)-1], "-")
-	template.LastMonthYear, err = humanizeMonth(lMonth[1], lMonth[0])
-	if err != nil {
-		return templateData{}, err
-	}
-
-	for _, k := range keys {
-		km := strings.Split(k, "-")
-		month, err := humanizeMonth(km[1], km[0])
-		if err != nil {
-			return templateData{}, err
-		}
-		template.MonthSummary = append(template.MonthSummary, monthOperation{Month: month, Transactions: statement.monthSummary[k]})
-	}
-	return template, nil
-}
-
-func humanizeMonth(monthNumber, year string) (string, error) {
-	month, err := strconv.Atoi(monthNumber)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s of %s", time.Month(month).String(), year), nil
-}
-
+// SendMail builds the input for the sendgrid API. Sends an email using templateData and the apikey/templateID provided
 func (c calculator) SendMail(data templateData) error {
 	request := sendgrid.GetRequest(c.apikey, "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
@@ -151,6 +106,8 @@ func (c calculator) SendMail(data templateData) error {
 	_, err = sendgrid.API(request)
 	return err
 }
+
+// helper functions
 
 func processFile(path string) (statementSummary, error) {
 	var (
@@ -222,4 +179,52 @@ func getAvg(vals []float64) float64 {
 		sum += v
 	}
 	return sum / float64(len(vals))
+}
+
+func getEmailTemplateData(filename string, statement statementSummary) (templateData, error) {
+	var err error
+	email := string([]byte(filename)[:len(filename)-4])
+	template := templateData{
+		Email:        email,
+		TotalBalance: fmt.Sprintf("%.2f", statement.total),
+		AvgCredit:    fmt.Sprintf("%.2f", statement.avgCredit),
+		AvgDebit:     fmt.Sprintf("%.2f", statement.avgDebit),
+	}
+	e := strings.Split(email, "@")
+	template.Name = strings.Title(e[0])
+	// sort monthSummary keys
+	keys := make([]string, 0, len(statement.monthSummary))
+	for k := range statement.monthSummary {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	fMonth := strings.Split(keys[0], "-")
+	template.FirstMonthYear, err = humanizeMonth(fMonth[1], fMonth[0])
+	if err != nil {
+		return templateData{}, err
+	}
+
+	lMonth := strings.Split(keys[len(keys)-1], "-")
+	template.LastMonthYear, err = humanizeMonth(lMonth[1], lMonth[0])
+	if err != nil {
+		return templateData{}, err
+	}
+
+	for _, k := range keys {
+		km := strings.Split(k, "-")
+		month, err := humanizeMonth(km[1], km[0])
+		if err != nil {
+			return templateData{}, err
+		}
+		template.MonthSummary = append(template.MonthSummary, monthOperation{Month: month, Transactions: statement.monthSummary[k]})
+	}
+	return template, nil
+}
+
+func humanizeMonth(monthNumber, year string) (string, error) {
+	month, err := strconv.Atoi(monthNumber)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s of %s", time.Month(month).String(), year), nil
 }
