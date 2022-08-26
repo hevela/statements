@@ -17,6 +17,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	sendgridGetRequest = sendgrid.GetRequest
+	sendgridAPI        = sendgrid.API
+)
+
 type Option func(c *calculator)
 
 func WithDirPath(dirPath string) Option {
@@ -55,7 +60,7 @@ func (c calculator) Run() {
 		logrus.Fatal(err)
 	}
 	for _, file := range files {
-		if file.IsDir() || file.Name() == ".gitignore" {
+		if file.IsDir() || file.Name() == ".gitignore" || file.Name() == "readme.md" {
 			continue
 		}
 		logrus.Info("processing file: ", file.Name())
@@ -76,34 +81,17 @@ func (c calculator) Run() {
 
 // SendMail builds the input for the sendgrid API. Sends an email using templateData and the apikey/templateID provided
 func (c calculator) SendMail(data templateData) error {
-	request := sendgrid.GetRequest(c.apikey, "/v3/mail/send", "https://api.sendgrid.com")
+	request := sendgridGetRequest(c.apikey, "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
 
-	bodyTpl := `	
-	{
-		"personalizations": [
-			{
-				"to": [
-					{
-						"email": "%s"
-					}
-				],
-				"dynamic_template_data":%s
-			}
-		],
-		"from": {
-			"email": "vellonce@gmail.com"
-		},
-		"template_id": "%s"
-	}
-	`
+	bodyTpl := `{"personalizations": [{"to": [{"email": "%s"}],"dynamic_template_data":%s}],"from": {"email": "vellonce@gmail.com"},"template_id": "%s"}`
 	var jsonData []byte
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 	request.Body = []byte(fmt.Sprintf(bodyTpl, data.Email, string(jsonData), c.templateID))
-	_, err = sendgrid.API(request)
+	_, err = sendgridAPI(request)
 	return err
 }
 

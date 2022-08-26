@@ -5,8 +5,24 @@ The present project is a long living process that parses csv files to generate a
 This worker is implemented assuming that:
 * all files are named after the email address we will be sending the account statement
 * All files have the extension `.csv`. E.g.: `user@mail.com.csv`
+* For the email, the "user" part of the email is used as the name of the client
 * The files are readable and available in the configured folder
 * The email is sent using [sendgrid](http://sendgrid.com) as email broker, so an API Key and a dynamic template must be created beforehand
+
+## TO-DO - Improvement Areas
+* Resume from where it left of in case of errors
+  * System must be able to resume work without duplication in the case the process finishes prematurely
+* Add metrics
+  * The system includes some basic logging, but it comes nowhere near to have useful metrics for instrumentation/monitoring
+* Handling special cases/ Bug fixing
+  * Due to having limited time, the current system works in the happy path. Cases where the files don't have the expected format, different naming notation, empty values or wrong/missing sendgrid API key and templateID values are not handled
+* Different approaches
+  * The current system works under many assumptions, this is because the problem statement is pretty open. The implemented approach might need changes if a different approach must be followed i.e.: Processing files after receiving a signal (pub-sub mechanism), triggering by a user request (exposing endpoints to trigger work), running on a schedule handled by another entity
+* Persistent storage
+  * For simplicity and because of having limited time, this system doesn't include any persisting storage. Having a database might solve some of the existing issues, like being able to resume from where it left in case of a fatal error
+* Unit testing
+  * Some unit test are included, but more throughout testing is needed
+
 
 ### Email details
 The email is sent using [sendgrid](http://sendgrid.com) as email broker. 
