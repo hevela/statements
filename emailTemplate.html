@@ -1,0 +1,52 @@
+<html>
+<head>
+    <title></title>
+
+</head>
+<body>
+<div class="container" style="color: rgb(56 73 103);width: 100%;margin: 0;padding: 0;display: block;position: relative;font-family: Helvetica,sans-serif;min-width: 600px;">
+    <table class="main" style="width: 90%;table-layout: fixed;margin: auto;">
+        <tr>
+            <td>
+                <a href="https://storicard.com" target="_blank"><img src="https://s4-recruiting.cdn.greenhouse.io/external_greenhouse_job_boards/logos/400/560/600/resized/LogoStori-azul_Horizontal_-_Copy_(2).png" alt="Stori logo"></a>
+            </td>
+        </tr>
+        <tr>
+            <td class="image" style="background-image: url(https://www.storicard.com/static/images/bg-home-es.webp);background-size: cover;background-repeat: no-repeat;height: 300px;" ;>
+                <span class="message" style="color: #FFF;font-size: 2em;text-align: center;width: 100%;position: absolute;top: 40%;left: -8%;text-shadow: #333 0 1px 3px;">Thank you for your preference!</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p class="message-body">
+                    <strong>Dear {{name}}:</strong>
+                    <br> <br>
+                    Please find in this email your account summary for the period {{first_month_year}} to {{last_month_year}}
+
+                </p>
+                <table style="width: 90%;table-layout: fixed;margin: auto;">
+                    <tr>
+                        <td class="label" style="width: 70%;">Total Balance:</td>
+                        <td class="value" style="width: 30%;">{{total_balance}}</td>
+                    </tr>
+                    <tr>
+                        <td class="label" style="width: 70%;">Average debit amount:</td>
+                        <td class="value" style="width: 30%;">${{avg_debit}}</td>
+                    </tr>
+                    <tr>
+                        <td class="label" style="width: 70%;">Average credit amount:</td>
+                        <td class="value" style="width: 30%;">${{avg_credit}}</td>
+                    </tr>
+                    {{#each month_summary}}
+                    <tr>
+                        <td class="label" style="width: 70%;">Number of transactions in {{this.month}}:</td>
+                        <td class="value" style="width: 30%;">{{this.transactions}}</td>
+                    </tr>
+                    {{/each}}
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
